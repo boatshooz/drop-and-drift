@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#F7F8F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171C19" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Drop & Drift">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Drop &amp; Drift</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+img{max-width:100%}
+
+/* Layout: sticky dope bar with the live hold; inputs column left, solution detail right; stacks on phones with the dope bar pinned on top. */
+:root{
+  --bg:#E8EBE5; --surface:#F7F8F4; --sunk:#EEF1EB; --ink:#18201B; --muted:#58645C; --line:#C8CFC6; --track:#D3D9D1;
+  --accent:#1E4E9E; --accent-ink:#FFFFFF; --accent-soft:#DCE5F3;
+  --warn:#9A5A08; --warn-soft:#F3E4C8; --danger:#A8251D; --good:#2B7343;
+  --display:'Saira Semi Condensed','Arial Narrow',Arial,sans-serif;
+  --body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F1311; --surface:#171C19; --sunk:#121614; --ink:#E2E7E0; --muted:#97A39A; --line:#2B342F; --track:#2A322D;
+  --accent:#86ABEC; --accent-ink:#0C1424; --accent-soft:#1D2A40;
+  --warn:#E3A84C; --warn-soft:#3A2D16; --danger:#F07A70; --good:#6CC28A; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0F1311; --surface:#171C19; --sunk:#121614; --ink:#E2E7E0; --muted:#97A39A; --line:#2B342F; --track:#2A322D;
+  --accent:#86ABEC; --accent-ink:#0C1424; --accent-soft:#1D2A40;
+  --warn:#E3A84C; --warn-soft:#3A2D16; --danger:#F07A70; --good:#6CC28A; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3{margin:0;text-wrap:balance}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Dope bar */
+.dope{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.dope-inner{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 28px}
+.brand{display:flex;flex-direction:column}
+.brand h1{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.brand span{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.readouts{display:flex;gap:28px;flex:1 1 auto;flex-wrap:wrap;align-items:flex-end}
+.readout .k{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.readout .v{font-family:var(--mono);font-size:32px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.05;white-space:nowrap}
+.readout .v .dir{color:var(--accent);margin-right:4px}
+.readout .v .u{font-size:14px;color:var(--muted);margin-left:4px;font-weight:500}
+.readout .sub{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.readout .delta{color:var(--warn);font-weight:600}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--sunk)}
+.seg button{border:0;background:transparent;padding:6px 12px;font-family:var(--display);font-weight:600;letter-spacing:.06em;cursor:pointer;min-width:44px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+select{background:var(--sunk);border:1px solid var(--line);border-radius:var(--r);padding:6px 8px;max-width:100%}
+.btn{border:1px solid var(--line);background:var(--sunk);border-radius:var(--r);padding:6px 12px;cursor:pointer;font-family:var(--display);font-weight:600;letter-spacing:.05em}
+.btn:hover{border-color:var(--accent)}
+.btn.on{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;padding:0;font-size:13px;text-decoration:underline;text-underline-offset:2px}
+
+/* Main grid */
+main.layout{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px;display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:880px){main.layout{grid-template-columns:minmax(0,1fr)}}
+.col{display:grid;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:12px;min-width:0}
+.card h2{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hint{font-size:12.5px;color:var(--muted);margin:0;line-height:1.4}
+
+/* Controls */
+.ctl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center}
+.ctl label{font-size:14px}
+.ctl .num{display:flex;align-items:baseline;gap:4px;justify-content:flex-end}
+.ctl input[type=number],.field input{width:86px;text-align:right;font-family:var(--mono);font-size:14px;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:3px 6px;font-variant-numeric:tabular-nums}
+.ctl output{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums}
+.ctl .unit{font-size:12px;color:var(--muted);min-width:24px;font-family:var(--mono)}
+.ctl input[type=range],.ctl .hint{grid-column:1/-1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--accent) 0 var(--p,50%),var(--track) var(--p,50%) 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);margin-top:-8px}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--track)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.bulletmeta{font-family:var(--mono);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn);font-weight:500}
+.chip.sub{background:var(--accent-soft);color:var(--accent)}
+.toggles{display:grid;gap:8px}
+.toggles label{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.toggles input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px}
+.toggles small{display:block;color:var(--muted);font-size:12.5px}
+
+/* Wind clock */
+.windwrap{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:12px;align-items:center}
+@media (max-width:380px){.windwrap{grid-template-columns:minmax(0,1fr)}}
+.clock{width:128px;height:128px;touch-action:none;cursor:grab;justify-self:center}
+.clock .face{fill:var(--sunk);stroke:var(--line)}
+.clock .tick{stroke:var(--muted)}
+.clock text{fill:var(--muted);font-family:var(--mono);font-size:10px;text-anchor:middle;dominant-baseline:central}
+.clock .arrow{stroke:var(--accent);stroke-width:3;fill:none;stroke-linecap:round}
+.clock .head{fill:var(--accent)}
+.clock .tgt{fill:var(--ink)}
+.windsum{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* Custom bullet form */
+details.add summary{cursor:pointer;color:var(--accent);font-size:13.5px}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.field{display:grid;gap:2px;font-size:12.5px;color:var(--muted)}
+.field input{width:100%;text-align:left}
+.field.wide{grid-column:1/-1}
+.formmsg{grid-column:1/-1;font-size:12.5px;color:var(--danger);min-height:1em}
+
+/* Output */
+.chartbox svg{width:100%;height:auto;display:block}
+.chartbox .grid{stroke:var(--line);stroke-width:1}
+.chartbox .los{stroke:var(--muted);stroke-dasharray:3 4}
+.chartbox .path{stroke:var(--accent);stroke-width:2.5;fill:none}
+.chartbox .base{stroke:var(--warn);stroke-width:2;fill:none;stroke-dasharray:6 5}
+.chartbox .trans{fill:var(--warn-soft);opacity:.7}
+.chartbox .mark{stroke:var(--ink);stroke-width:1}
+.chartbox .dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.chartbox text{fill:var(--muted);font-family:var(--mono);font-size:11px}
+.chartbox text.lbl{fill:var(--ink);font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:0;border-top:2.5px solid var(--accent);vertical-align:middle;margin-right:6px}
+.legend i.b{border-top:2px dashed var(--warn)}
+.legend i.t{border:0;height:10px;background:var(--warn-soft);width:14px}
+
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.two{grid-template-columns:minmax(0,1fr)}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px 16px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--mono);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:12px;color:var(--muted);font-weight:400;margin-left:3px}
+.stat .note{font-size:12px}
+.good{color:var(--good)} .warn{color:var(--warn)} .bad{color:var(--danger)}
+
+.brk{display:grid;gap:6px}
+.brk h3{font-size:12px;font-family:var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:4px}
+.brk .line{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;font-size:14px}
+.brk .val{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.brk .inch{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;min-width:62px;font-variant-numeric:tabular-nums}
+.brk .bar{grid-column:1/-1;height:4px;background:var(--track);border-radius:2px;overflow:hidden}
+.brk .bar span{display:block;height:100%;background:var(--accent)}
+.brk .total{border-top:1px solid var(--line);padding-top:6px;font-weight:600}
+
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+th,td{padding:6px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td{font-family:var(--mono);font-size:13.5px}
+th:first-child,td:first-child{text-align:left}
+tr.cur td{background:var(--accent-soft);font-weight:600}
+td .chip{font-family:var(--body)}
+.sens td:first-child{font-family:var(--body);font-size:14px}
+.diffs{display:flex;flex-wrap:wrap;gap:6px}
+.truegrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.truegrid{grid-template-columns:minmax(0,1fr)}}
+.trueblock{display:grid;gap:10px;align-content:start;background:var(--sunk);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.trueblock h3{font-size:12px;font-family:var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);font-weight:700}
+.fieldrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fieldrow .field input{background:var(--surface)}
+.trueout{font-size:14px;display:grid;gap:6px}
+.trueout:empty{display:none}
+.trueout .big{font-family:var(--mono);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.trueout .big small{font-size:13px;color:var(--muted);font-weight:400;margin-left:6px}
+.pred{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.advice{font-size:12.5px;color:var(--warn);margin:0}
+.steps{margin:0;padding-left:18px;font-size:13px;color:var(--muted);display:grid;gap:2px}
+.foot{font-size:12.5px;color:var(--muted);line-height:1.5}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="dope">
+  <div class="dope-inner">
+    <div class="brand"><h1>Drop &amp; Drift</h1><span id="dope-bullet">—</span></div>
+    <div class="readouts" aria-live="polite">
+      <div class="readout"><div class="k">Range</div><div class="v"><span id="ro-range">800</span><span class="u">yd</span></div><div class="sub" id="ro-range-sub">&nbsp;</div></div>
+      <div class="readout"><div class="k">Elevation</div><div class="v" id="ro-elev">—</div><div class="sub" id="ro-elev-sub">&nbsp;</div></div>
+      <div class="readout"><div class="k">Windage</div><div class="v" id="ro-wind">—</div><div class="sub" id="ro-wind-sub">&nbsp;</div></div>
+    </div>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="Output units">
+        <button type="button" id="u-mil" aria-pressed="true">MIL</button>
+        <button type="button" id="u-moa" aria-pressed="false">MOA</button>
+      </div>
+      <select id="click" aria-label="Turret click value"></select>
+      <button type="button" class="btn" id="pin" title="Freeze this solution so you can compare changes against it">Pin</button>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+  <div class="card" id="startup" role="alert" style="grid-column:1/-1;border-color:var(--warn);background:var(--warn-soft)">
+    <strong>The calculator has not started.</strong>
+    <span id="startup-msg">Open this file in a current version of Chrome, Edge, Safari or Firefox. Email attachments, file previews and cloud-drive viewers show the page but do not run the calculator.</span>
+  </div>
+  <div class="col" id="inputs">
+    <section class="card" id="g-bullet">
+      <h2>Bullet</h2>
+      <select id="bullet" aria-label="Bullet"></select>
+      <div class="bulletmeta" id="bulletmeta"></div>
+      <div class="row between">
+        <div class="seg" role="group" aria-label="Drag model">
+          <button type="button" id="m-g1" aria-pressed="false">G1</button>
+          <button type="button" id="m-g7" aria-pressed="true">G7</button>
+        </div>
+        <span id="edited" hidden><span class="chip">Edited</span> <button type="button" class="linkbtn" id="reset-bullet">Reset to library</button></span>
+      </div>
+      <div class="ctls"></div>
+      <details class="add" id="addbox">
+        <summary>Add your own bullet</summary>
+        <form class="form" id="addform" novalidate>
+          <label class="field"><span>Brand</span><input id="f-brand" placeholder="Berger"></label>
+          <label class="field"><span>Name</span><input id="f-name" placeholder="6.5mm 153.5gr LRHT"></label>
+          <label class="field"><span>Diameter (in)</span><input id="f-dia" inputmode="decimal" placeholder="0.264"></label>
+          <label class="field"><span>Weight (gr)</span><input id="f-wt" inputmode="decimal" placeholder="153.5"></label>
+          <label class="field"><span>Length (in)</span><input id="f-len" inputmode="decimal" placeholder="1.520"></label>
+          <label class="field"><span>G1 BC</span><input id="f-g1" inputmode="decimal" placeholder="0.704"></label>
+          <label class="field"><span>G7 BC</span><input id="f-g7" inputmode="decimal" placeholder="0.360"></label>
+          <div class="field" style="align-self:end"><button type="submit" class="btn primary">Add bullet</button></div>
+          <p class="formmsg" id="formmsg"></p>
+        </form>
+        <p class="hint">Your bullets are saved in this browser only. <button type="button" class="linkbtn" id="del-bullet" hidden>Delete selected bullet</button></p>
+      </details>
+    </section>
+
+    <section class="card" id="g-rifle">
+      <h2>Rifle</h2>
+      <div class="ctls"></div>
+      <div class="row between"><span style="font-size:14px">Twist direction</span>
+        <div class="seg" role="group" aria-label="Twist direction">
+          <button type="button" id="t-R" aria-pressed="true">Right</button>
+          <button type="button" id="t-L" aria-pressed="false">Left</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="g-shot">
+      <h2>Shot</h2>
+      <div class="ctls"></div>
+      <div class="windwrap">
+        <div class="ctls-wind"></div>
+        <svg class="clock" id="clock" viewBox="-64 -64 128 128" role="img" aria-label="Wind direction clock. Drag to set where the wind comes from."></svg>
+      </div>
+      <div class="windsum" id="windsum"></div>
+    </section>
+
+    <section class="card" id="g-air">
+      <h2>Atmosphere</h2>
+      <div class="ctls"></div>
+    </section>
+
+    <section class="card" id="g-earth">
+      <h2>Earth &amp; corrections</h2>
+      <div class="ctls"></div>
+      <div class="toggles">
+        <label><input type="checkbox" id="c-spin" checked><span>Spin drift<small>Litz approximation from gyroscopic stability</small></span></label>
+        <label><input type="checkbox" id="c-cor" checked><span>Coriolis<small>Horizontal and vertical (Eötvös) components</small></span></label>
+        <label><input type="checkbox" id="c-jump" checked><span>Aerodynamic jump<small>Vertical shift from crosswind at the muzzle</small></span></label>
+      </div>
+    </section>
+  </div>
+
+  <div class="col" id="outputs">
+    <section class="card" id="pinbox" hidden>
+      <h2>Compared with pinned solution <button type="button" class="linkbtn" id="unpin">Clear pin</button></h2>
+      <div class="diffs" id="diffs"></div>
+    </section>
+
+    <section class="card chartbox">
+      <h2>Trajectory <span id="chart-unit" style="letter-spacing:.04em;text-transform:none;font-family:var(--mono);font-weight:400">path height, inches</span></h2>
+      <svg id="chart" viewBox="0 0 640 260" role="img" aria-label="Bullet path relative to line of sight"></svg>
+      <div class="legend"><span><i></i>Current</span><span id="leg-base" hidden><i class="b"></i>Pinned</span><span id="leg-trans"><i class="t"></i>Below Mach 1.2</span></div>
+    </section>
+
+    <div class="two">
+      <section class="card">
+        <h2>Where the hold comes from</h2>
+        <div class="brk" id="brk"></div>
+      </section>
+      <section class="card">
+        <h2>What moves the hold</h2>
+        <div class="tablewrap"><table class="sens"><thead><tr><th>Change</th><th>Elev</th><th>Wind</th></tr></thead><tbody id="sens"></tbody></table></div>
+        <p class="hint">Change in hold at the target range. Temperature changes air density only; powder temperature sensitivity is not modeled yet.</p>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>At the target</h2>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="card" id="truing">
+      <h2>True to your rifle</h2>
+      <ol class="steps">
+        <li>Set the atmosphere, angle and wind to match when you shot.</li>
+        <li>True muzzle velocity first, at a distance where the bullet is still well supersonic.</li>
+        <li>Then true BC farther out, near where the bullet slows toward Mach 1.2.</li>
+      </ol>
+      <div class="truegrid">
+        <div class="trueblock">
+          <h3>Muzzle velocity</h3>
+          <div class="fieldrow">
+            <label class="field"><span>Range (yd)</span><input id="tv-range" inputmode="decimal" value="600"></label>
+            <label class="field"><span>Elevation that hit (<span class="tu">MIL</span>)</span><input id="tv-obs" inputmode="decimal"></label>
+          </div>
+          <div class="pred" id="tv-pred"></div>
+          <p class="advice" id="tv-adv"></p>
+          <div class="row"><button type="button" class="btn primary" id="tv-go">Calculate velocity</button></div>
+          <div class="trueout" id="tv-out" aria-live="polite"></div>
+        </div>
+        <div class="trueblock">
+          <h3>Ballistic coefficient <span class="tm">(G7)</span></h3>
+          <div class="fieldrow">
+            <label class="field"><span>Range (yd)</span><input id="tb-range" inputmode="decimal" value="1000"></label>
+            <label class="field"><span>Elevation that hit (<span class="tu">MIL</span>)</span><input id="tb-obs" inputmode="decimal"></label>
+          </div>
+          <div class="pred" id="tb-pred"></div>
+          <p class="advice" id="tb-adv"></p>
+          <div class="row"><button type="button" class="btn primary" id="tb-go">Calculate BC</button></div>
+          <div class="trueout" id="tb-out" aria-live="polite"></div>
+        </div>
+      </div>
+      <p class="hint">Enter the elevation you dialed or held that centered your group, as an up value. Use the average of several shots, not a single hit.</p>
+    </section>
+
+    <section class="card">
+      <h2>Range card</h2>
+      <div class="tablewrap"><table><thead><tr><th>Range</th><th>Elev</th><th>Wind</th><th>Clicks</th><th>Vel fps</th><th>Energy ft·lb</th><th>TOF s</th><th></th></tr></thead><tbody id="card"></tbody></table></div>
+    </section>
+
+    <p class="foot">Point-mass solver using standard G1 and G7 drag tables. Range is line-of-sight distance. The zero is computed in standard air, which changes nothing measurable at 100 yards. Library BCs and dimensions are starter values drawn from published manufacturer data; check them against the manufacturer's current figures, and true the muzzle velocity against real impacts before trusting long-range holds.</p>
+  </div>
+</main>
+
+<!-- ===== Ballistics core: no DOM access. Lift this block as-is into a JS module, or port line-for-line to Swift/Kotlin. ===== -->
+<script>
+window.onerror = function (msg) {
+  var el = document.getElementById('startup'), m = document.getElementById('startup-msg');
+  if (el && m) { el.hidden = false; m.textContent = 'This browser could not run the calculator (' + msg + '). Update the browser, or open the file in a current version of Chrome, Edge, Safari or Firefox.'; }
+};
+</script>
+<script id="solver">
+const Ballistics = (() => {
+  // Standard drag functions, [Mach, Cd] pairs.
+  const pairs = a => { const o = []; for (let i = 0; i < a.length; i += 2) o.push([a[i], a[i + 1]]); return o; };
+  const G1 = pairs([0,.2629,.05,.2558,.1,.2487,.15,.2413,.2,.2344,.25,.2278,.3,.2214,.35,.2155,.4,.2104,.45,.2061,.5,.2032,.55,.2020,.6,.2034,.7,.2165,.725,.2230,.75,.2313,.775,.2417,.8,.2546,.825,.2706,.85,.2901,.875,.3136,.9,.3415,.925,.3734,.95,.4084,.975,.4448,1,.4805,1.025,.5136,1.05,.5427,1.075,.5677,1.1,.5883,1.125,.6053,1.15,.6191,1.2,.6393,1.25,.6518,1.3,.6589,1.35,.6621,1.4,.6625,1.45,.6607,1.5,.6573,1.55,.6528,1.6,.6474,1.65,.6413,1.7,.6347,1.75,.6280,1.8,.6210,1.85,.6141,1.9,.6072,1.95,.6003,2,.5934,2.05,.5867,2.1,.5804,2.15,.5743,2.2,.5685,2.25,.5630,2.3,.5577,2.35,.5527,2.4,.5481,2.45,.5438,2.5,.5397,2.6,.5325,2.7,.5264,2.8,.5211,2.9,.5168,3,.5133,3.1,.5105,3.2,.5084,3.3,.5067,3.4,.5054,3.5,.5040,3.6,.5030,3.7,.5022,3.8,.5016,3.9,.5010,4,.5006,4.2,.4998,4.4,.4995,4.6,.4992,4.8,.4990,5,.4988]);
+  const G7 = pairs([0,.1198,.05,.1197,.1,.1196,.15,.1194,.2,.1193,.25,.1194,.3,.1194,.35,.1194,.4,.1193,.45,.1193,.5,.1194,.55,.1193,.6,.1194,.65,.1197,.7,.1202,.725,.1207,.75,.1215,.775,.1226,.8,.1242,.825,.1266,.85,.1306,.875,.1368,.9,.1464,.925,.1660,.95,.2054,.975,.2993,1,.3803,1.025,.4015,1.05,.4043,1.075,.4034,1.1,.4014,1.125,.3987,1.15,.3955,1.2,.3884,1.25,.3810,1.3,.3732,1.35,.3657,1.4,.3580,1.5,.3440,1.55,.3376,1.6,.3315,1.65,.3260,1.7,.3209,1.75,.3160,1.8,.3117,1.85,.3078,1.9,.3042,1.95,.3010,2,.2980,2.05,.2951,2.1,.2922,2.15,.2892,2.2,.2864,2.25,.2835,2.3,.2807,2.35,.2779,2.4,.2752,2.45,.2725,2.5,.2697,2.55,.2670,2.6,.2643,2.65,.2615,2.7,.2588,2.75,.2561,2.8,.2533,2.85,.2506,2.9,.2479,2.95,.2451,3,.2424,3.1,.2368,3.2,.2313,3.3,.2258,3.4,.2205,3.5,.2154,3.6,.2106,3.7,.2060,3.8,.2017,3.9,.1975,4,.1935,4.2,.1861,4.4,.1793,4.6,.1730,4.8,.1672,5,.1618]);
+
+  const YD = 0.9144, IN = 0.0254, FPS = 0.3048, MPH = 0.44704;
+  const GRAV = 9.80665, OMEGA = 7.292115e-5, D2R = Math.PI / 180;
+  const BC_SI = 703.0696;           // 1 lb/in² in kg/m²
+  const RAD_TO = { mil: 1000, moa: 3437.7468 };
+  const DT = 0.0005, MAX_T = 12;
+
+  function cd(T, m) {
+    const n = T.length;
+    if (m <= T[0][0]) return T[0][1];
+    if (m >= T[n - 1][0]) return T[n - 1][1];
+    let lo = 0, hi = n - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (T[mid][0] > m) hi = mid; else lo = mid; }
+    const [m0, c0] = T[lo], [m1, c1] = T[hi];
+    return c0 + (c1 - c0) * (m - m0) / (m1 - m0);
+  }
+
+  // Air density (kg/m³) from station pressure, temperature and humidity; speed of sound (m/s).
+  function environment({ tempF, pressInHg, rh }) {
+    const Tc = (tempF - 32) * 5 / 9, Tk = Tc + 273.15;
+    const P = pressInHg * 3386.389;
+    const es = 610.78 * Math.pow(10, 7.5 * Tc / (Tc + 237.3));
+    const Pv = Math.max(0, Math.min(100, rh)) / 100 * es;
+    const rho = (P - Pv) / (287.058 * Tk) + Pv / (461.495 * Tk);
+    const c = 20.0468 * Math.sqrt(Tk);
+    const daFt = 44330.8 * (1 - Math.pow(rho / 1.225, 0.234969)) * 3.28084;
+    return { rho, c, daFt, tempF, pressInHg };
+  }
+
+  // Miller twist rule with velocity and atmosphere corrections.
+  function stability(inp) {
+    const d = inp.diaIn, t = inp.twistIn / d, l = inp.lenIn / d;
+    let sg = 30 * inp.weightGr / (t * t * d * d * d * l * (1 + l * l));
+    sg *= Math.cbrt(inp.mvFps / 2800);
+    sg *= ((inp.tempF + 460) / 519) * (29.92 / inp.pressInHg);
+    return sg;
+  }
+
+  // Frame: x along line of sight, y perpendicular up, z right. Level frame used for wind and Coriolis.
+  function params(inp, env, { wind, coriolis, angle }) {
+    const a = (angle === undefined || angle === null ? inp.angleDeg : angle) * D2R, cosA = Math.cos(a), sinA = Math.sin(a);
+    const th = inp.windClock * 30 * D2R, s = wind ? inp.windMph * MPH : 0;
+    const wxL = -s * Math.cos(th), wz = -s * Math.sin(th);
+    const lat = inp.latDeg * D2R, az = inp.azDeg * D2R, om = coriolis ? OMEGA : 0;
+    return {
+      cosA, sinA, c: env.c, table: inp.model === 'g1' ? G1 : G7,
+      k: env.rho * Math.PI / (8 * inp.bc * BC_SI),
+      mv: inp.mvFps * FPS, sight: inp.sightIn * IN,
+      wx: wxL * cosA, wy: -wxL * sinA, wz,
+      gx: -GRAV * sinA, gy: -GRAV * cosA,
+      Ox: om * Math.cos(lat) * Math.cos(az), Oy: om * Math.sin(lat), Oz: -om * Math.cos(lat) * Math.sin(az)
+    };
+  }
+
+  // Integrate (RK2 midpoint) and sample the state at each checkpoint distance (m, ascending).
+  function fly(p, phi, cps) {
+    const out = new Array(cps.length).fill(null);
+    let x = 0, y = -p.sight, z = 0, t = 0;
+    let vx = p.mv * Math.cos(phi), vy = p.mv * Math.sin(phi), vz = 0;
+    const a = [0, 0, 0], hasCor = p.Ox || p.Oy || p.Oz;
+    const acc = (ux, uy, uz) => {
+      const rx = ux - p.wx, ry = uy - p.wy, rz = uz - p.wz;
+      const vr = Math.sqrt(rx * rx + ry * ry + rz * rz);
+      const d = p.k * vr * cd(p.table, vr / p.c);
+      let ax = -d * rx + p.gx, ay = -d * ry + p.gy, az = -d * rz;
+      if (hasCor) {
+        const lx = ux * p.cosA - uy * p.sinA, ly = ux * p.sinA + uy * p.cosA, lz = uz;
+        const cx = -2 * (p.Oy * lz - p.Oz * ly), cy = -2 * (p.Oz * lx - p.Ox * lz), cz = -2 * (p.Ox * ly - p.Oy * lx);
+        ax += cx * p.cosA + cy * p.sinA; ay += -cx * p.sinA + cy * p.cosA; az += cz;
+      }
+      a[0] = ax; a[1] = ay; a[2] = az;
+    };
+    let i = 0;
+    while (i < cps.length && cps[i] <= 0) i++;
+    while (i < cps.length && t < MAX_T) {
+      const px = x, py = y, pz = z, pvx = vx, pvy = vy, pvz = vz, pt = t;
+      acc(vx, vy, vz);
+      const mx = vx + a[0] * DT / 2, my = vy + a[1] * DT / 2, mz = vz + a[2] * DT / 2;
+      acc(mx, my, mz);
+      x += mx * DT; y += my * DT; z += mz * DT;
+      vx += a[0] * DT; vy += a[1] * DT; vz += a[2] * DT; t += DT;
+      while (i < cps.length && x >= cps[i]) {
+        const f = (cps[i] - px) / (x - px);
+        out[i] = { x: cps[i], y: py + (y - py) * f, z: pz + (z - pz) * f,
+          vx: pvx + (vx - pvx) * f, vy: pvy + (vy - pvy) * f, vz: pvz + (vz - pvz) * f, t: pt + DT * f };
+        i++;
+      }
+      if (vx <= 0) break;
+    }
+    return out;
+  }
+
+  // Bore angle above line of sight that puts the bullet on the LOS at the zero range (standard air, no wind).
+  function zeroAngle(inp) {
+    const env = environment({ tempF: 59, pressInHg: 29.92, rh: 0 });
+    const p = params(inp, env, { wind: false, coriolis: false, angle: 0 });
+    const tx = inp.zeroYd * YD;
+    const yAt = ph => { const r = fly(p, ph, [tx])[0]; return r ? r.y : -1; };
+    let a0 = 0, a1 = 0.003, y0 = yAt(a0), y1 = yAt(a1);
+    for (let k = 0; k < 10 && Math.abs(y1) > 1e-7 && y1 !== y0; k++) {
+      const a2 = a1 - y1 * (a1 - a0) / (y1 - y0);
+      a0 = a1; y0 = y1; a1 = a2; y1 = yAt(a1);
+    }
+    return a1;
+  }
+
+  function crosswindFromLeftMph(inp) { return -Math.sin(inp.windClock * 30 * D2R) * inp.windMph; }
+  function headwindMph(inp) { return Math.cos(inp.windClock * 30 * D2R) * inp.windMph; }
+
+  // Turn a sampled point into a firing solution, adding spin drift and aerodynamic jump.
+  function describe(pt, rangeYd, inp, env, sg) {
+    const dir = inp.twistDir === 'L' ? -1 : 1;
+    const sdIn = inp.spin ? dir * 1.25 * (sg + 1.2) * Math.pow(pt.t, 1.83) : 0;
+    const l = inp.lenIn / inp.diaIn;
+    const jumpMoa = inp.jump ? dir * (0.01 * sg - 0.0024 * l + 0.032) * crosswindFromLeftMph(inp) : 0;
+    const jumpIn = (jumpMoa / RAD_TO.moa) * pt.x / IN;
+    const y = pt.y + jumpIn * IN, z = pt.z + sdIn * IN;
+    const v = Math.hypot(pt.vx, pt.vy, pt.vz) / FPS;
+    return {
+      range: rangeYd, x: pt.x,
+      elevRad: Math.atan2(-y, pt.x), windRad: Math.atan2(-z, pt.x),
+      pathIn: y / IN, driftIn: z / IN, sdIn, jumpIn,
+      vFps: v, mach: v * FPS / env.c, energy: inp.weightGr * v * v / 450240, tof: pt.t
+    };
+  }
+
+  function holdAt(inp) {
+    const env = environment(inp), sg = stability(inp), phi = zeroAngle(inp);
+    const pt = fly(params(inp, env, { wind: true, coriolis: inp.coriolis }), phi, [inp.rangeYd * YD])[0];
+    return pt ? describe(pt, inp.rangeYd, inp, env, sg) : null;
+  }
+
+  function solve(inp) {
+    const env = environment(inp), sg = stability(inp), phi = zeroAngle(inp);
+    const ranges = [...new Set([...(inp.ranges || []), inp.rangeYd])].sort((a, b) => a - b);
+    const pts = fly(params(inp, env, { wind: true, coriolis: inp.coriolis }), phi, ranges.map(r => r * YD));
+    const rows = ranges.map((r, i) => pts[i] ? describe(pts[i], r, inp, env, sg) : null);
+    const target = rows[ranges.indexOf(inp.rangeYd)];
+
+    // Breakdown at the target: separate flights isolate wind and Coriolis.
+    let breakdown = null;
+    if (target) {
+      const tx = [inp.rangeYd * YD];
+      const still = fly(params(inp, env, { wind: false, coriolis: false }), phi, tx)[0];
+      const windOnly = fly(params(inp, env, { wind: true, coriolis: false }), phi, tx)[0];
+      const full = pts[ranges.indexOf(inp.rangeYd)];
+      if (still && windOnly) breakdown = {
+        dropIn: still.y / IN,
+        headwindIn: (windOnly.y - still.y) / IN,
+        corVIn: (full.y - windOnly.y) / IN,
+        jumpIn: target.jumpIn,
+        windIn: windOnly.z / IN,
+        spinIn: target.sdIn,
+        corHIn: (full.z - windOnly.z) / IN,
+        totalVIn: target.pathIn, totalHIn: target.driftIn
+      };
+    }
+    return { env, sg, zeroAngleRad: phi, rows, target, breakdown,
+      crosswindMph: crosswindFromLeftMph(inp), headwindMph: headwindMph(inp) };
+  }
+
+  return { solve, holdAt, environment, stability, RAD_TO, YD, IN };
+})();
+if (typeof module !== 'undefined') module.exports = Ballistics;
+</script>
+
+<!-- ===== App: UI, library, chart ===== -->
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const STORE = 'dropdrift.v1';
+
+// Starter library. Values from published manufacturer data; verify before relying on them.
+const LIBRARY = [
+  // id, brand, name, dia, weight, length, G1, G7
+  ['h-224-73', 'Hornady', '.224 73gr ELD Match', .224, 73, .985, .398, .200],
+  ['h-224-88', 'Hornady', '.224 88gr ELD Match', .224, 88, 1.272, .545, .274],
+  ['h-6-108', 'Hornady', '6mm 108gr ELD Match', .243, 108, 1.228, .536, .270],
+  ['h-65-140', 'Hornady', '6.5mm 140gr ELD Match', .264, 140, 1.402, .646, .326],
+  ['h-65-147', 'Hornady', '6.5mm 147gr ELD Match', .264, 147, 1.425, .697, .351],
+  ['h-65-143x', 'Hornady', '6.5mm 143gr ELD-X', .264, 143, 1.380, .625, .315],
+  ['h-7-180', 'Hornady', '7mm 180gr ELD Match', .284, 180, 1.524, .796, .398],
+  ['h-30-178', 'Hornady', '.308 178gr ELD Match', .308, 178, 1.400, .547, .275],
+  ['h-30-208', 'Hornady', '.308 208gr ELD Match', .308, 208, 1.511, .670, .335],
+  ['h-338-285', 'Hornady', '.338 285gr ELD Match', .338, 285, 1.746, .789, .399],
+  ['b-6-105', 'Berger', '6mm 105gr Hybrid Target', .243, 105, 1.215, .536, .275],
+  ['b-6-109', 'Berger', '6mm 109gr Long Range Hybrid Target', .243, 109, 1.278, .552, .283],
+  ['b-65-140', 'Berger', '6.5mm 140gr Hybrid Target', .264, 140, 1.392, .618, .311],
+  ['b-65-144', 'Berger', '6.5mm 144gr Long Range Hybrid Target', .264, 144, 1.474, .655, .336],
+  ['b-65-1535', 'Berger', '6.5mm 153.5gr Long Range Hybrid Target', .264, 153.5, 1.514, .694, .356],
+  ['b-7-180', 'Berger', '7mm 180gr Hybrid Target', .284, 180, 1.527, .674, .345],
+  ['b-30-185', 'Berger', '.308 185gr Juggernaut OTM Tactical', .308, 185, 1.347, .552, .283],
+  ['b-30-215', 'Berger', '.308 215gr Hybrid Target', .308, 215, 1.488, .691, .354],
+  ['b-338-300', 'Berger', '.338 300gr Hybrid OTM Tactical', .338, 300, 1.895, .818, .419],
+  ['s-224-77', 'Sierra', '.224 77gr MatchKing', .224, 77, .995, .372, .190],
+  ['s-65-142', 'Sierra', '6.5mm 142gr MatchKing', .264, 142, 1.375, .595, .301],
+  ['s-30-168', 'Sierra', '.308 168gr MatchKing', .308, 168, 1.215, .462, .218],
+  ['s-30-175', 'Sierra', '.308 175gr MatchKing', .308, 175, 1.240, .505, .243],
+  ['l-65-139', 'Lapua', '6.5mm 139gr Scenar', .264, 139, 1.343, .615, .307],
+  ['l-30-185', 'Lapua', '.308 185gr Scenar', .308, 185, 1.284, .505, .254],
+  ['l-338-250', 'Lapua', '.338 250gr Scenar', .338, 250, 1.567, .648, .322],
+  ['l-338-300', 'Lapua', '.338 300gr Scenar', .338, 300, 1.712, .736, .381]
+].map(([id, brand, name, dia, wt, len, g1, g7]) => ({ id, brand, name, dia, wt, len, g1, g7 }));
+
+const CONTROLS = [
+  { key: 'weight', g: 'bullet', label: 'Bullet weight', min: 30, max: 400, step: .5, dec: 1, unit: 'gr' },
+  { key: 'bc', g: 'bullet', label: 'Ballistic coefficient', min: .1, max: 1.1, step: .001, dec: 3, unit: 'lb/in²' },
+  { key: 'mv', g: 'rifle', label: 'Muzzle velocity', min: 1600, max: 3600, step: 5, dec: 0, unit: 'fps' },
+  { key: 'sight', g: 'rifle', label: 'Sight height', min: .5, max: 4, step: .05, dec: 2, unit: 'in', hint: 'Center of bore to center of scope.' },
+  { key: 'zero', g: 'rifle', label: 'Zero range', min: 25, max: 500, step: 25, dec: 0, unit: 'yd' },
+  { key: 'twist', g: 'rifle', label: 'Barrel twist', min: 5, max: 16, step: .25, dec: 2, unit: 'in', prefix: '1:' },
+  { key: 'range', g: 'shot', label: 'Target range', min: 50, max: 2500, step: 5, dec: 0, unit: 'yd', hint: 'Line-of-sight distance, as your rangefinder reads it.' },
+  { key: 'angle', g: 'shot', label: 'Shot angle', min: -45, max: 45, step: 1, dec: 0, unit: '°', hint: 'Positive is uphill.' },
+  { key: 'windSpeed', g: 'wind', label: 'Wind speed', min: 0, max: 30, step: .5, dec: 1, unit: 'mph' },
+  { key: 'windDir', g: 'wind', label: 'Wind from', min: 0, max: 12, step: .25, dec: 2, unit: '', clock: true },
+  { key: 'temp', g: 'air', label: 'Temperature', min: -20, max: 120, step: 1, dec: 0, unit: '°F' },
+  { key: 'press', g: 'air', label: 'Station pressure', min: 20, max: 31, step: .01, dec: 2, unit: 'inHg', hint: 'Absolute pressure where you are standing, not the sea-level corrected number from a weather report.' },
+  { key: 'rh', g: 'air', label: 'Humidity', min: 0, max: 100, step: 1, dec: 0, unit: '%' },
+  { key: 'lat', g: 'earth', label: 'Latitude', min: -90, max: 90, step: .5, dec: 1, unit: '°', hint: 'Negative is south of the equator.' },
+  { key: 'az', g: 'earth', label: 'Azimuth to target', min: 0, max: 359, step: 1, dec: 0, unit: '°', hint: 'Compass bearing from you to the target. 0 is north.' }
+];
+const CMAP = Object.fromEntries(CONTROLS.map(c => [c.key, c]));
+
+const DEFAULTS = {
+  bulletId: 'h-65-140', model: 'g7', weight: 140, bc: .326,
+  mv: 2710, sight: 1.75, zero: 100, twist: 8, twistDir: 'R',
+  range: 800, angle: 0, windSpeed: 10, windDir: 3,
+  temp: 59, press: 29.92, rh: 50, lat: 35, az: 0,
+  spin: true, cor: true, jump: true, unit: 'mil', click: .1
+};
+
+let custom = [];
+let state = { ...DEFAULTS };
+let pinned = null;
+
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+  if (saved) { custom = Array.isArray(saved.custom) ? saved.custom : []; Object.assign(state, saved.state || {}); }
+} catch (e) { /* storage unavailable: run with defaults */ }
+
+const library = () => [...LIBRARY, ...custom];
+const bullet = () => library().find(b => b.id === state.bulletId) || LIBRARY[3];
+if (!library().some(b => b.id === state.bulletId)) state.bulletId = DEFAULTS.bulletId;
+
+let saveTimer;
+function persist() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(STORE, JSON.stringify({ state, custom })); } catch (e) {}
+  }, 300);
+}
+
+// ---------- Formatting ----------
+const clockText = v => { const h0 = Math.floor(v + 1e-9) % 12, m = Math.round((v - Math.floor(v + 1e-9)) * 60); return `${h0 === 0 ? 12 : h0}:${String(m).padStart(2, '0')}`; };
+const fix = (v, d) => (Math.abs(v) < 0.5 * Math.pow(10, -d) ? 0 : v).toFixed(d);
+const holdVal = rad => rad * Ballistics.RAD_TO[state.unit];
+const unitName = () => state.unit === 'mil' ? 'MIL' : 'MOA';
+const decs = () => state.unit === 'mil' ? (state.click < .1 ? 2 : 1) : 2;
+function holdParts(rad, pos, neg) {
+  const v = holdVal(rad), d = decs();
+  const mag = fix(Math.abs(v), d);
+  const dir = Number(mag) === 0 ? '' : (v > 0 ? pos : neg);
+  return { dir, mag, clicks: Math.round(Math.abs(v) / state.click) };
+}
+const signed = (v, d) => { const s = fix(v, d); return Number(s) > 0 ? '+' + s : (Number(s) === 0 ? fix(0, d) : '−' + s.slice(1)); };
+const num = (v, d = 0) => v.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+
+// ---------- Build controls ----------
+function buildControl(c) {
+  const el = document.createElement('div');
+  el.className = 'ctl';
+  const right = c.clock
+    ? `<output id="n-${c.key}" for="r-${c.key}"></output><span class="unit">o'clock</span>`
+    : `${c.prefix ? `<span class="unit" style="min-width:0">${c.prefix}</span>` : ''}<input type="number" id="n-${c.key}" min="${c.min}" max="${c.max}" step="${c.step}" inputmode="decimal" aria-label="${c.label}"><span class="unit">${c.unit}</span>`;
+  el.innerHTML = `<label for="r-${c.key}">${c.label}</label><span class="num">${right}</span>
+    <input type="range" id="r-${c.key}" min="${c.min}" max="${c.max}" step="${c.step}">
+    ${c.hint ? `<p class="hint">${c.hint}</p>` : ''}`;
+  const target = c.g === 'wind' ? $('#g-shot .ctls-wind') : $(`#g-${c.g} .ctls`);
+  target.appendChild(el);
+  const r = el.querySelector('input[type=range]'), n = el.querySelector('input[type=number]');
+  r.addEventListener('input', () => { state[c.key] = parseFloat(r.value); sync(c.key, true); changed(); });
+  if (n) n.addEventListener('change', () => {
+    let v = parseFloat(n.value);
+    if (!isFinite(v)) v = state[c.key];
+    state[c.key] = Math.min(c.max, Math.max(c.min, v));
+    sync(c.key); changed();
+  });
+}
+function sync(key, fromSlider) {
+  const c = CMAP[key], v = state[key];
+  const r = $(`#r-${key}`), n = $(`#n-${key}`);
+  if (!fromSlider) r.value = v;
+  r.style.setProperty('--p', ((v - c.min) / (c.max - c.min) * 100) + '%');
+  if (c.clock) { n.value = clockText(v); r.setAttribute('aria-valuetext', `${clockText(v)} o'clock`); }
+  else { n.value = fix(v, c.dec); r.setAttribute('aria-valuetext', `${fix(v, c.dec)} ${c.unit}`); }
+}
+CONTROLS.forEach(buildControl);
+
+// ---------- Bullet library UI ----------
+function buildBulletSelect() {
+  const sel = $('#bullet');
+  const brands = [...new Set(library().map(b => b.brand))];
+  sel.innerHTML = brands.map(br => `<optgroup label="${esc(br)}">${library().filter(b => b.brand === br)
+    .map(b => `<option value="${esc(b.id)}">${esc(b.name)}${b.custom ? ' (yours)' : ''}</option>`).join('')}</optgroup>`).join('');
+  sel.value = state.bulletId;
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+function bcFor(b, model) { return model === 'g1' ? b.g1 : b.g7; }
+function selectBullet(id) {
+  state.bulletId = id;
+  const b = bullet();
+  if (!bcFor(b, state.model)) state.model = b.g7 ? 'g7' : 'g1';
+  state.weight = b.wt; state.bc = bcFor(b, state.model);
+  sync('weight'); sync('bc'); renderBulletMeta(); changed();
+}
+function renderBulletMeta() {
+  const b = bullet();
+  $('#bulletmeta').innerHTML = `<span>⌀ ${b.dia.toFixed(3)}"</span><span>${b.wt} gr</span><span>${b.len.toFixed(3)}" long</span><span>G1 ${b.g1 ? b.g1.toFixed(3) : '—'}</span><span>G7 ${b.g7 ? b.g7.toFixed(3) : '—'}</span>`;
+  $('#m-g1').disabled = !b.g1; $('#m-g7').disabled = !b.g7;
+  $('#m-g1').setAttribute('aria-pressed', state.model === 'g1'); $('#m-g7').setAttribute('aria-pressed', state.model === 'g7');
+  const edited = Math.abs(state.weight - b.wt) > 1e-6 || Math.abs(state.bc - bcFor(b, state.model)) > 1e-6;
+  $('#edited').hidden = !edited;
+  $('#del-bullet').hidden = !b.custom;
+  $('#dope-bullet').textContent = `${b.brand} ${b.name} · ${state.model.toUpperCase()} ${state.bc.toFixed(3)} · ${num(state.mv)} fps`;
+}
+$('#bullet').addEventListener('change', e => selectBullet(e.target.value));
+['g1', 'g7'].forEach(m => $(`#m-${m}`).addEventListener('click', () => {
+  state.model = m; state.bc = bcFor(bullet(), m); sync('bc'); renderBulletMeta(); changed();
+}));
+$('#reset-bullet').addEventListener('click', () => selectBullet(state.bulletId));
+
+$('#addform').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = id => $(id).value.trim();
+  const f = id => parseFloat(v(id));
+  const b = { brand: v('#f-brand') || 'Custom', name: v('#f-name'), dia: f('#f-dia'), wt: f('#f-wt'), len: f('#f-len'), g1: f('#f-g1') || 0, g7: f('#f-g7') || 0, custom: true };
+  const msg = $('#formmsg');
+  if (!b.name) return msg.textContent = 'Give the bullet a name.';
+  if (!(b.dia > .1 && b.dia < .6)) return msg.textContent = 'Diameter should be in inches, for example 0.264.';
+  if (!(b.wt > 10 && b.wt < 1000)) return msg.textContent = 'Weight should be in grains, for example 140.';
+  if (!(b.len > .3 && b.len < 3)) return msg.textContent = 'Length should be in inches, for example 1.402. It is needed for spin drift.';
+  if (!(b.g1 > 0 || b.g7 > 0)) return msg.textContent = 'Enter at least one ballistic coefficient.';
+  msg.textContent = '';
+  b.id = 'c-' + Date.now().toString(36);
+  custom.push(b);
+  buildBulletSelect(); selectBullet(b.id);
+  $('#addform').reset();
+});
+$('#del-bullet').addEventListener('click', () => {
+  custom = custom.filter(b => b.id !== state.bulletId);
+  buildBulletSelect(); selectBullet(DEFAULTS.bulletId);
+});
+
+// ---------- Other toggles ----------
+['R', 'L'].forEach(d => $(`#t-${d}`).addEventListener('click', () => { state.twistDir = d; changed(); }));
+[['spin', '#c-spin'], ['cor', '#c-cor'], ['jump', '#c-jump']].forEach(([k, id]) => {
+  $(id).checked = state[k];
+  $(id).addEventListener('change', e => { state[k] = e.target.checked; changed(); });
+});
+function buildClickSelect() {
+  const opts = state.unit === 'mil' ? [[.1, '0.1 mil clicks'], [.05, '0.05 mil clicks']] : [[.25, '¼ MOA clicks'], [.125, '⅛ MOA clicks'], [.5, '½ MOA clicks']];
+  if (!opts.some(o => o[0] === state.click)) state.click = opts[0][0];
+  $('#click').innerHTML = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+  $('#click').value = state.click;
+}
+['mil', 'moa'].forEach(u => $(`#u-${u}`).addEventListener('click', () => { state.unit = u; buildClickSelect(); changed(); }));
+$('#click').addEventListener('change', e => { state.click = parseFloat(e.target.value); changed(); });
+
+// ---------- Wind clock ----------
+const clockSvg = $('#clock');
+function drawClock() {
+  let s = '<circle class="face" r="58"/>';
+  for (let h = 0; h < 12; h++) {
+    const a = h * 30 * Math.PI / 180, x = Math.sin(a), y = -Math.cos(a);
+    s += `<line class="tick" x1="${x * 52}" y1="${y * 52}" x2="${x * 57}" y2="${y * 57}" stroke-width="${h % 3 ? 1 : 2}"/>`;
+    if (h % 3 === 0) s += `<text x="${x * 43}" y="${y * 43}">${h === 0 ? 12 : h}</text>`;
+  }
+  const a = state.windDir * 30 * Math.PI / 180, fx = Math.sin(a), fy = -Math.cos(a);
+  const len = 14 + Math.min(state.windSpeed, 30) / 30 * 18;
+  const sx = fx * 34, sy = fy * 34, ex = fx * (34 - len), ey = fy * (34 - len);
+  const px = -fy, py = fx;
+  if (state.windSpeed > 0) s += `<line class="arrow" x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}"/><path class="head" d="M${ex - fx * 7} ${ey - fy * 7} L${ex + px * 5} ${ey + py * 5} L${ex - px * 5} ${ey - py * 5}Z"/>`;
+  s += `<path class="tgt" d="M0 -30 L4 -24 L-4 -24Z"/><circle class="tgt" r="3"/>`;
+  clockSvg.innerHTML = s;
+}
+function clockFromPointer(e) {
+  const r = clockSvg.getBoundingClientRect();
+  const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  let deg = Math.atan2(dx, -dy) * 180 / Math.PI; if (deg < 0) deg += 360;
+  let v = Math.round(deg / 30 / .25) * .25; if (v >= 12) v = 0;
+  state.windDir = v; sync('windDir'); changed();
+}
+let dragging = false;
+clockSvg.addEventListener('pointerdown', e => { dragging = true; clockSvg.setPointerCapture(e.pointerId); clockFromPointer(e); });
+clockSvg.addEventListener('pointermove', e => { if (dragging) clockFromPointer(e); });
+clockSvg.addEventListener('pointerup', () => { dragging = false; });
+clockSvg.addEventListener('pointercancel', () => { dragging = false; });
+
+// ---------- Pin / compare ----------
+$('#pin').addEventListener('click', () => {
+  if (pinned) { pinned = null; } else if (last) {
+    pinned = { state: { ...state }, bullet: bullet(), target: last.res.target, path: last.chartPts };
+  }
+  render();
+});
+$('#unpin').addEventListener('click', () => { pinned = null; render(); });
+
+function diffList() {
+  if (!pinned) return [];
+  const p = pinned.state, out = [];
+  if (p.bulletId !== state.bulletId) out.push(`Bullet: ${pinned.bullet.name} → ${bullet().name}`);
+  if (p.model !== state.model) out.push(`Drag model: ${p.model.toUpperCase()} → ${state.model.toUpperCase()}`);
+  CONTROLS.forEach(c => {
+    if (c.key === 'weight' && p.bulletId !== state.bulletId) return;
+    if (Math.abs(p[c.key] - state[c.key]) > 1e-9) {
+      const f = v => c.clock ? `${clockText(v)} o'clock` : `${c.prefix || ''}${fix(v, c.dec)} ${c.unit}`;
+      out.push(`${c.label}: ${f(p[c.key])} → ${f(state[c.key])}`);
+    }
+  });
+  if (p.twistDir !== state.twistDir) out.push(`Twist: ${p.twistDir} → ${state.twistDir}`);
+  [['spin', 'Spin drift'], ['cor', 'Coriolis'], ['jump', 'Aero jump']].forEach(([k, n]) => { if (p[k] !== state[k]) out.push(`${n}: ${p[k] ? 'on' : 'off'} → ${state[k] ? 'on' : 'off'}`); });
+  return out;
+}
+
+// ---------- Solve & render ----------
+function inputs(over = {}) {
+  const b = bullet();
+  return Object.assign({
+    mvFps: state.mv, bc: state.bc, model: state.model, weightGr: state.weight, diaIn: b.dia, lenIn: b.len,
+    twistIn: state.twist, twistDir: state.twistDir, sightIn: state.sight, zeroYd: state.zero,
+    rangeYd: state.range, angleDeg: state.angle, windMph: state.windSpeed, windClock: state.windDir,
+    tempF: state.temp, pressInHg: state.press, rh: state.rh, latDeg: state.lat, azDeg: state.az,
+    spin: state.spin, coriolis: state.cor, jump: state.jump
+  }, over);
+}
+
+let last = null, raf = 0;
+function changed() { renderBulletMeta(); if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); persist(); }
+
+function render() {
+  const maxR = Math.min(2500, Math.max(600, Math.ceil(state.range * 1.2 / 100) * 100));
+  const step = maxR <= 1000 ? 10 : 25;
+  const ranges = [];
+  for (let r = step; r <= maxR; r += step) ranges.push(r);
+  for (let r = 100; r <= maxR; r += 100) ranges.push(r);
+  const res = Ballistics.solve(inputs({ ranges }));
+  const chartPts = res.rows.filter(r => r && r.range % step === 0);
+  last = { res, chartPts, maxR };
+
+  // Toggles
+  $('#u-mil').setAttribute('aria-pressed', state.unit === 'mil'); $('#u-moa').setAttribute('aria-pressed', state.unit === 'moa');
+  $('#t-R').setAttribute('aria-pressed', state.twistDir === 'R'); $('#t-L').setAttribute('aria-pressed', state.twistDir === 'L');
+  $('#pin').textContent = pinned ? 'Unpin' : 'Pin'; $('#pin').classList.toggle('on', !!pinned);
+  drawClock();
+
+  const t = res.target, U = unitName();
+  $('#ro-range').textContent = num(state.range);
+  $('#ro-range-sub').textContent = state.angle ? `${state.angle > 0 ? '+' : '−'}${Math.abs(state.angle)}° ${state.angle > 0 ? 'uphill' : 'downhill'}` : 'level';
+  if (!t) {
+    $('#ro-elev').innerHTML = '<span class="bad" style="font-size:16px">Out of range</span>';
+    $('#ro-wind').textContent = '—'; $('#ro-elev-sub').textContent = 'Bullet does not reach the target'; $('#ro-wind-sub').innerHTML = '&nbsp;';
+  } else {
+    const e = holdParts(t.elevRad, 'U', 'D'), w = holdParts(t.windRad, 'R', 'L');
+    $('#ro-elev').innerHTML = `<span class="dir">${e.dir}</span>${e.mag}<span class="u">${U}</span>`;
+    $('#ro-wind').innerHTML = `<span class="dir">${w.dir}</span>${w.mag}<span class="u">${U}</span>`;
+    const dE = pinned && pinned.target ? holdVal(t.elevRad - pinned.target.elevRad) : null;
+    const dW = pinned && pinned.target ? holdVal(t.windRad - pinned.target.windRad) : null;
+    $('#ro-elev-sub').innerHTML = `${e.clicks} clicks${dE !== null ? ` · <span class="delta">Δ ${signed(dE, decs())}</span>` : ''}`;
+    $('#ro-wind-sub').innerHTML = `${w.clicks} clicks${dW !== null ? ` · <span class="delta">Δ ${signed(dW, decs())}</span>` : ''}`;
+  }
+
+  // Wind summary
+  const cw = res.crosswindMph, hw = res.headwindMph, frac = state.windSpeed ? Math.abs(cw) / state.windSpeed : 0;
+  const value = frac > .95 ? 'full value' : frac > .8 ? '¾+ value' : frac > .4 ? 'about half value' : frac > .05 ? 'low value' : 'no value';
+  $('#windsum').textContent = state.windSpeed
+    ? `${clockText(state.windDir)} · crosswind ${fix(Math.abs(cw), 1)} mph ${cw > 0.05 ? 'left to right' : cw < -0.05 ? 'right to left' : ''} (${value}) · ${hw >= 0 ? 'head' : 'tail'}wind ${fix(Math.abs(hw), 1)} mph`
+    : 'No wind';
+
+  // Pin box
+  $('#pinbox').hidden = !pinned; $('#leg-base').hidden = !pinned;
+  if (pinned) {
+    const d = diffList();
+    $('#diffs').innerHTML = d.length ? d.map(x => `<span class="chip sub">${esc(x)}</span>`).join('') : '<span class="hint">Move any slider to see how the hold changes against the pinned solution.</span>';
+  }
+
+  drawChart(res, chartPts, maxR);
+  renderBreakdown(res);
+  renderSensitivity(t);
+  renderStats(res);
+  renderCard(res, maxR);
+}
+
+function renderBreakdown(res) {
+  const b = res.breakdown, el = $('#brk');
+  if (!b) { el.innerHTML = '<p class="hint">The bullet does not reach the target range.</p>'; return; }
+  const x = res.target.x, IN = Ballistics.IN;
+  const ang = inch => holdVal(-inch * IN / x); // hold needed to cancel this impact shift
+  const d = decs() + 1;
+  const vItems = [['Gravity and drag', b.dropIn], ['Head/tail wind', b.headwindIn], ['Coriolis (vertical)', b.corVIn], ['Aerodynamic jump', b.jumpIn]];
+  const hItems = [['Wind drift', b.windIn], ['Spin drift', b.spinIn], ['Coriolis (horizontal)', b.corHIn]];
+  const maxV = Math.max(...vItems.map(i => Math.abs(i[1]))) || 1;
+  const maxH = Math.max(...hItems.map(i => Math.abs(i[1])), Math.abs(b.totalHIn)) || 1;
+  const line = ([n, inch], max) => `<div class="line"><span>${n}</span><span class="val">${signed(ang(inch), d)}</span><span class="inch">${signed(inch, 1)}"</span><div class="bar"><span style="width:${Math.min(100, Math.abs(inch) / max * 100)}%"></span></div></div>`;
+  el.innerHTML = `<h3>Elevation (+ is up) · ${unitName()}</h3>${vItems.map(i => line(i, maxV)).join('')}
+    <div class="line total"><span>Total</span><span class="val">${signed(ang(b.totalVIn), d)}</span><span class="inch">${signed(b.totalVIn, 1)}"</span></div>
+    <h3>Windage (+ is right)</h3>${hItems.map(i => line(i, maxH)).join('')}
+    <div class="line total"><span>Total</span><span class="val">${signed(ang(b.totalHIn), d)}</span><span class="inch">${signed(b.totalHIn, 1)}"</span></div>
+    <p class="hint">Inches are where the bullet lands relative to your aim; the hold column cancels it.</p>`;
+}
+
+function renderSensitivity(t) {
+  const body = $('#sens');
+  if (!t) { body.innerHTML = ''; return; }
+  const d = decs() + 1;
+  const tests = [
+    ['Muzzle velocity +25 fps', { mvFps: state.mv + 25 }],
+    ['BC +0.010', { bc: state.bc + .01 }],
+    ['Range +10 yd', { rangeYd: state.range + 10 }],
+    ['Wind +1 mph', { windMph: state.windSpeed + 1 }],
+    ['Wind ½ hour later', { windClock: (state.windDir + .5) % 12 }],
+    ['Temperature +10 °F', { tempF: state.temp + 10 }],
+    ['Pressure +0.50 inHg', { pressInHg: state.press + .5 }]
+  ];
+  body.innerHTML = tests.map(([n, over]) => {
+    const h = Ballistics.holdAt(inputs(over));
+    if (!h) return `<tr><td>${n}</td><td colspan="2">out of range</td></tr>`;
+    return `<tr><td>${n}</td><td>${signed(holdVal(h.elevRad - t.elevRad), d)}</td><td>${signed(holdVal(h.windRad - t.windRad), d)}</td></tr>`;
+  }).join('');
+}
+
+function renderStats(res) {
+  const t = res.target, env = res.env, sg = res.sg;
+  const sgClass = sg >= 1.5 ? 'good' : sg >= 1.0 ? 'warn' : 'bad';
+  const sgNote = sg >= 1.5 ? 'Fully stable' : sg >= 1.0 ? 'Marginal; BC may drop' : 'Unstable';
+  const stat = (k, v, u, note = '', cls = '') => `<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}<small>${u}</small></div>${note ? `<div class="note ${cls}">${note}</div>` : ''}</div>`;
+  let html = '';
+  if (t) {
+    const mClass = t.mach < 1.0 ? 'bad' : t.mach < 1.2 ? 'warn' : '';
+    html += stat('Velocity', num(t.vFps), 'fps') + stat('Mach', t.mach.toFixed(2), '', t.mach < 1 ? 'Subsonic' : t.mach < 1.2 ? 'Transonic' : 'Supersonic', mClass)
+      + stat('Energy', num(t.energy), 'ft·lb') + stat('Time of flight', t.tof.toFixed(3), 's');
+  }
+  html += stat('Stability (Sg)', sg.toFixed(2), '', sgNote, sgClass)
+    + stat('Density altitude', num(Math.round(env.daFt / 10) * 10), 'ft')
+    + stat('Air density', env.rho.toFixed(4), 'kg/m³')
+    + stat('Speed of sound', num(env.c / 0.3048), 'fps');
+  $('#stats').innerHTML = html;
+}
+
+function renderCard(res, maxR) {
+  const rows = res.rows.filter(r => r && (r.range % 100 === 0 || r.range === state.range));
+  const seen = new Set();
+  const U = unitName();
+  $('#card').innerHTML = rows.filter(r => !seen.has(r.range) && seen.add(r.range)).map(r => {
+    const e = holdParts(r.elevRad, 'U', 'D'), w = holdParts(r.windRad, 'R', 'L');
+    const chip = r.mach < 1 ? '<span class="chip" style="background:var(--warn-soft);color:var(--danger)">subsonic</span>' : r.mach < 1.2 ? '<span class="chip">transonic</span>' : '';
+    return `<tr class="${r.range === state.range ? 'cur' : ''}"><td>${num(r.range)} yd</td><td>${e.dir} ${e.mag}</td><td>${w.dir} ${w.mag}</td><td>${e.clicks} / ${w.clicks}</td><td>${num(r.vFps)}</td><td>${num(r.energy)}</td><td>${r.tof.toFixed(2)}</td><td>${chip}</td></tr>`;
+  }).join('') + `<tr><td colspan="8" style="text-align:left;font-family:var(--body);font-size:12.5px;color:var(--muted)">Holds in ${U}. Clicks are elevation / windage at ${state.click} ${U.toLowerCase()} per click.</td></tr>`;
+}
+
+function niceStep(span, n) {
+  const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+  return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p;
+}
+function drawChart(res, pts, maxR) {
+  const W = 640, H = 260, m = { l: 52, r: 16, t: 14, b: 30 };
+  const base = pinned && pinned.path ? pinned.path : [];
+  const all = [{ range: 0, pathIn: -state.sight }, ...pts];
+  const ys = all.map(p => p.pathIn).concat(base.map(p => p.pathIn), [0]);
+  let yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const ystep = niceStep(Math.max(1, yMax - yMin), 5);
+  yMin = Math.floor(yMin / ystep) * ystep; yMax = Math.ceil(yMax / ystep) * ystep;
+  if (yMax === yMin) yMax = yMin + ystep;
+  const X = r => m.l + r / maxR * (W - m.l - m.r);
+  const Y = v => m.t + (yMax - v) / (yMax - yMin) * (H - m.t - m.b);
+  let s = '';
+  const trans = pts.find(p => p.mach < 1.2);
+  if (trans) s += `<rect class="trans" x="${X(trans.range)}" y="${m.t}" width="${X(maxR) - X(trans.range)}" height="${H - m.t - m.b}"/>`;
+  for (let v = yMin; v <= yMax + 1e-9; v += ystep) s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${num(v)}</text>`;
+  const xstep = niceStep(maxR, 6);
+  for (let r = 0; r <= maxR + 1e-9; r += xstep) s += `<text x="${X(r)}" y="${H - 10}" text-anchor="middle">${num(r)}</text>`;
+  s += `<text x="${W - m.r}" y="${H - 10 - 14}" text-anchor="end">yd</text>`;
+  s += `<line class="los" x1="${m.l}" x2="${W - m.r}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  const line = arr => arr.map((p, i) => `${i ? 'L' : 'M'}${X(p.range).toFixed(1)} ${Y(p.pathIn).toFixed(1)}`).join('');
+  if (base.length) s += `<path class="base" d="${line([{ range: 0, pathIn: -pinned.state.sight }, ...base.filter(p => p.range <= maxR)])}"/>`;
+  s += `<path class="path" d="${line(all)}"/>`;
+  const t = res.target;
+  if (t) {
+    const tx = X(state.range), ty = Y(t.pathIn);
+    s += `<line class="mark" x1="${tx}" x2="${tx}" y1="${m.t}" y2="${H - m.b}" stroke-dasharray="2 3"/><circle class="dot" cx="${tx}" cy="${ty}" r="5"/>`;
+    const right = tx < W - 150;
+    s += `<text class="lbl" x="${tx + (right ? 8 : -8)}" y="${Math.max(m.t + 12, ty - 10)}" text-anchor="${right ? 'start' : 'end'}">${num(t.pathIn, 1)}" at ${num(state.range)} yd</text>`;
+  }
+  if (state.zero <= maxR) s += `<circle cx="${X(state.zero)}" cy="${Y(0)}" r="3" fill="var(--muted)"/><text x="${X(state.zero)}" y="${Y(0) - 8}" text-anchor="middle">zero</text>`;
+  $('#chart').innerHTML = s;
+  $('#leg-trans').hidden = !trans;
+}
+
+// ---------- Truing ----------
+const TRUE = {
+  mv: { pre: 'tv', key: 'mv', over: v => ({ mvFps: v }), lo: 1000, hi: 4500,
+        show: v => `${num(Math.round(v))}<small>fps</small>`, delta: (v, o) => `${signed(v - o, 0)} fps from ${num(o)}`,
+        round: v => Math.round(v) },
+  bc: { pre: 'tb', key: 'bc', over: v => ({ bc: v }), lo: 0.05, hi: 1.5,
+        show: v => `${v.toFixed(3)}<small>${state.model.toUpperCase()}</small>`, delta: (v, o) => `${signed(v - o, 3)} from ${o.toFixed(3)}`,
+        round: v => Math.round(v * 1000) / 1000 }
+};
+const undo = {};
+function trueRange(kind) { const v = parseFloat($(`#${TRUE[kind].pre}-range`).value); return isFinite(v) && v >= 50 && v <= 3000 ? v : null; }
+
+function truePreview(kind) {
+  const T = TRUE[kind], r = trueRange(kind);
+  const pred = $(`#${T.pre}-pred`), adv = $(`#${T.pre}-adv`);
+  if (!r) { pred.textContent = 'Enter a range between 50 and 3,000 yd.'; adv.textContent = ''; return; }
+  const h = Ballistics.holdAt(inputs({ rangeYd: r }));
+  if (!h) { pred.textContent = 'The bullet does not reach this range with the current inputs.'; adv.textContent = ''; return; }
+  pred.textContent = `Current prediction: ${fix(holdVal(h.elevRad), decs())} ${unitName()} up · Mach ${h.mach.toFixed(2)}`;
+  $(`#${T.pre}-obs`).placeholder = fix(holdVal(h.elevRad), decs());
+  adv.textContent = kind === 'mv'
+    ? (h.mach < 1.4 ? 'The bullet is slowing toward transonic here, so BC error mixes into the result. A closer distance isolates velocity better.' : '')
+    : (h.mach > 1.6 ? 'BC has little effect on drop this close. Use a distance where the bullet is down near Mach 1.2 to 1.5.'
+      : h.mach < 1.0 ? 'The bullet is subsonic here. The standard drag curves are least reliable in this region.' : '');
+}
+
+// Elevation falls as MV or BC rises, so bisect on the value that reproduces the observed hold.
+function trueCalc(kind) {
+  const T = TRUE[kind], out = $(`#${T.pre}-out`), r = trueRange(kind);
+  const obs = parseFloat($(`#${T.pre}-obs`).value);
+  if (!r) { out.innerHTML = '<span class="bad">Enter a range between 50 and 3,000 yd.</span>'; return; }
+  if (!isFinite(obs) || obs <= 0) { out.innerHTML = `<span class="bad">Enter the elevation that hit, in ${unitName()} up.</span>`; return; }
+  if (r <= state.zero) { out.innerHTML = '<span class="bad">Use a range well beyond your zero.</span>'; return; }
+  const goal = obs / Ballistics.RAD_TO[state.unit];
+  const f = v => { const h = Ballistics.holdAt(inputs({ ...T.over(v), rangeYd: r })); return h ? h.elevRad - goal : Infinity; };
+  let lo = T.lo, hi = T.hi;
+  if (!(f(lo) >= 0 && f(hi) <= 0)) { out.innerHTML = '<span class="bad">No realistic value matches that elevation. Check the range, the units, and that the zero and sight height are right.</span>'; return; }
+  for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (f(mid) > 0) lo = mid; else hi = mid; }
+  const v = T.round((lo + hi) / 2), old = state[T.key];
+  out.innerHTML = `<div class="big">${T.show(v)}</div><div class="pred">${T.delta(v, old)}</div>
+    <div class="row"><button type="button" class="btn primary" data-apply="${kind}" data-v="${v}">Apply</button></div>`;
+}
+
+function trueApply(kind, v) {
+  const T = TRUE[kind];
+  undo[kind] = state[T.key];
+  state[T.key] = v; sync(T.key); changed();
+  $(`#${T.pre}-out`).innerHTML = `<div>${kind === 'mv' ? 'Muzzle velocity' : `${state.model.toUpperCase()} BC`} set to <strong>${kind === 'mv' ? num(v) + ' fps' : v.toFixed(3)}</strong>.</div>
+    <div class="row"><button type="button" class="linkbtn" data-undo="${kind}">Undo</button></div>`;
+}
+
+['mv', 'bc'].forEach(kind => {
+  const p = TRUE[kind].pre;
+  $(`#${p}-go`).addEventListener('click', () => trueCalc(kind));
+  $(`#${p}-range`).addEventListener('input', () => truePreview(kind));
+  $(`#${p}-out`).addEventListener('click', e => {
+    const a = e.target.closest('[data-apply]'), u = e.target.closest('[data-undo]');
+    if (a) trueApply(kind, parseFloat(a.dataset.v));
+    if (u && undo[kind] !== undefined) {
+      state[TRUE[kind].key] = undo[kind]; sync(TRUE[kind].key); changed();
+      $(`#${p}-out`).innerHTML = '<div class="pred">Restored the previous value.</div>';
+    }
+  });
+});
+function renderTruing() {
+  document.querySelectorAll('#truing .tu').forEach(el => el.textContent = unitName());
+  document.querySelector('#truing .tm').textContent = `(${state.model.toUpperCase()})`;
+  truePreview('mv'); truePreview('bc');
+}
+const _render = render;
+render = function () { _render(); renderTruing(); };
+
+// ---------- Init ----------
+buildBulletSelect();
+buildClickSelect();
+CONTROLS.forEach(c => sync(c.key));
+renderBulletMeta();
+render();
+$('#startup').hidden = true;
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>
